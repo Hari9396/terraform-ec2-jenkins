@@ -19,6 +19,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+terraform.tfvars
 
 # Ignore .terraform.lock.hcl if you don’t want to lock provider versions
 # Uncomment below if not needed in Git
