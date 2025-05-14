@@ -7,6 +7,8 @@ pipeline {
 
   environment {
     AWS_REGION = "us-east-1"
+    AWS_ACCESS_KEY_ID = "${env.AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY = "${env.AWS_SECRET_ACCESS_KEY}"
   }
 
   stages {
@@ -18,17 +20,11 @@ pipeline {
 
     stage('Terraform Plan') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'aws-creds-id',
-          usernameVariable: 'AWS_ACCESS_KEY_ID',
-          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        )]) {
-          sh '''
-            terraform plan -out=tfplan \
-              -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
-              -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          '''
-        }
+        sh '''
+          terraform plan -out=tfplan \
+            -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+            -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+        '''
       }
     }
 
@@ -43,17 +39,11 @@ pipeline {
         expression { params.RUN_TF_DESTROY }
       }
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'aws-creds-id',
-          usernameVariable: 'AWS_ACCESS_KEY_ID',
-          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        )]) {
-          sh '''
-            terraform destroy -auto-approve \
-              -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
-              -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          '''
-        }
+        sh '''
+          terraform destroy -auto-approve \
+            -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+            -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+        '''
       }
     }
   }
