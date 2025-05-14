@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'agent1' } // Replace with your Jenkins agent label
+    agent { label 'Agent1' } // Replace with your Jenkins agent label
 
     environment {
         TF_VAR_region = 'us-east-1' // Replace with your AWS region
