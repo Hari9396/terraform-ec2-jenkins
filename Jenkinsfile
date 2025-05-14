@@ -7,12 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/Hari9396/terraform-ec2-jenkins.git'
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 sh 'terraform init'
