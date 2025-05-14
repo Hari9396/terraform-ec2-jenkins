@@ -1,39 +1,73 @@
 pipeline {
-    agent { label 'Agent1' }
+    agent { label 'agent1' } // Replace with your Jenkins agent label
 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        TF_VAR_region = 'us-east-1' // Replace with your AWS region
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // AWS access key credential (set in Jenkins)
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // AWS secret key credential (set in Jenkins)
+    }
+
+    parameters {
+        booleanParam(name: 'DESTROY', defaultValue: false, description: 'Set to true to destroy resources after apply')
     }
 
     stages {
-        stage('Terraform Init') {
+        stage('Checkout') {
             steps {
-                sh 'terraform init'
+                checkout scm // Checkout from your Git repository
             }
         }
 
-     stage('Terraform Plan') {
+        stage('Terraform Init') {
             steps {
-                sh '''
-                terraform plan \
-                -var "aws_access_key=${AWS_ACCESS_KEY_ID}" \
-                -var "aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
-                -out=tfplan
-                '''
+                script {
+                    // Initialize Terraform
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    // Run Terraform plan
+                    sh 'terraform plan -out=tfplan'
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -auto-approve tfplan'
+                script {
+                    // Run Terraform apply if DESTROY is not true
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            when {
+                expression { return params.DESTROY == true } // Execute only if DESTROY is true
+            }
+            steps {
+                script {
+                    // Run Terraform destroy to delete resources
+                    sh 'terraform destroy -auto-approve'
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline finished."
+            // Clean the workspace after each build
+            cleanWs()
+        }
+        success {
+            echo "Terraform apply completed successfully."
+        }
+        failure {
+            echo "Terraform apply failed. Check the logs."
         }
     }
 }
