@@ -1,8 +1,7 @@
 pipeline {
-  agent any
+  agent { label 'Agent1' }
 
   parameters {
-    booleanParam(name: 'RUN_TF_APPLY', defaultValue: true, description: 'Apply the Terraform plan?')
     booleanParam(name: 'RUN_TF_DESTROY', defaultValue: true, description: 'Destroy the infrastructure after apply?')
   }
 
@@ -19,12 +18,11 @@ pipeline {
 
     stage('Terraform Plan') {
       steps {
-        withCredentials([[
-          $class: 'UsernamePasswordMultiBinding',
+        withCredentials([usernamePassword(
           credentialsId: 'aws-creds-id',
           usernameVariable: 'AWS_ACCESS_KEY_ID',
           passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        ]]) {
+        )]) {
           sh '''
             terraform plan -out=tfplan \
               -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
@@ -35,11 +33,7 @@ pipeline {
     }
 
     stage('Terraform Apply') {
-      when {
-        expression { params.RUN_TF_APPLY }
-      }
       steps {
-        input message: "Confirm Apply: Proceed with terraform apply?"
         sh 'terraform apply -auto-approve tfplan'
       }
     }
@@ -49,13 +43,11 @@ pipeline {
         expression { params.RUN_TF_DESTROY }
       }
       steps {
-        input message: "Confirm Destroy: Are you sure you want to destroy the infrastructure?"
-        withCredentials([[
-          $class: 'UsernamePasswordMultiBinding',
+        withCredentials([usernamePassword(
           credentialsId: 'aws-creds-id',
           usernameVariable: 'AWS_ACCESS_KEY_ID',
           passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-        ]]) {
+        )]) {
           sh '''
             terraform destroy -auto-approve \
               -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
