@@ -13,15 +13,19 @@ pipeline {
             }
         }
 
-        stage('Terraform Plan') {
+     stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -out=tfplan'
+                sh '''
+                terraform plan \
+                -var "aws_access_key=${AWS_ACCESS_KEY_ID}" \
+                -var "aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
+                -out=tfplan
+                '''
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                input message: "Approve to apply?"
                 sh 'terraform apply -auto-approve tfplan'
             }
         }
